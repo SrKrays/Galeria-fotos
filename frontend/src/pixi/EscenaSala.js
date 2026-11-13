@@ -19,7 +19,7 @@ import fragSala from './shaders/sala.frag?raw';
 import fragVidrio from './shaders/vidrio.frag?raw';
 import meta from './salaMeta.json';
 import { pixiConfig } from './pixiConfig.js';
-import { bajarNivel, calidadForzada, detectarCalidad, movimientoReducido, soportaWebGL } from './calidad.js';
+import { bajarNivel, calidadForzada, detectarCalidad, movimientoReducido, recordarCalidad, soportaWebGL } from './calidad.js';
 
 const MAX_VIDRIOS = 6;
 const MAX_CUADROS = 6;
@@ -86,7 +86,8 @@ export class EscenaSala {
     this._focos = new Map();        // índice -> {k, parpadeo}
     this._ganancias = new Map();
     this._motas = [];
-    this._fps = { suma: 0, cuadros: 0 };
+    this._fps = { suma: 0, cuadros: 0, desde: 0 };
+    this._factorRes = 1;            // 1 = resolución completa del nivel; baja sola si el equipo no da
     this._alCambiarCalidad = null;
     this._cuadro = this._cuadro.bind(this);
   }
@@ -102,6 +103,12 @@ export class EscenaSala {
     return (x0 - this.zoomDesde[0] * this.ancho) * this.zoom + this.zoomHasta[0] * this.ancho;
   }
 
+  /** resolución real del lienzo: la del pantalla, con tope por nivel y el factor adaptativo */
+  _resolucion() {
+    const q = this.cfg.calidad[this.calidad];
+    return Math.min(window.devicePixelRatio || 1, q.resolucionMax) * this._factorRes;
+  }
+
   get ancho() { return this.contenedor.clientWidth; }
   get alto() { return this.contenedor.clientHeight; }
 
@@ -114,9 +121,8 @@ export class EscenaSala {
 
     try {
       const q = this.cfg.calidad[this.calidad];
-      const resolucion = Math.min(window.devicePixelRatio || 1, q.resolucionMax);
-      const comun = { resizeTo: contenedor, resolution: resolucion, autoDensity: true, antialias: false,
-                      preference: 'webgl', powerPreference: 'high-performance' };
+      const comun = { resizeTo: contenedor, resolution: this._resolucion(), autoDensity: true, antialias: false,
+                      preference: 'webgl', powerPreference: this.calidad === 'alto' ? 'high-performance' : 'default' };
 
       this.fondo = new Application();
       this.vidrio = new Application();
@@ -144,10 +150,12 @@ export class EscenaSala {
         app.canvas.setAttribute('aria-hidden', 'true');
         capa.appendChild(app.canvas);
       }
+      this._vigilarContexto(contenedor);
       this.vidrio.canvas.style.display = q.vidrio ? '' : 'none';
 
       this._limitarFps(q.fps);
       this._crearMotas();
+      this._fps.desde = performance.now();
       this._cuadro({ deltaMS: 16 });               // primer cuadro ya dibujado antes de mostrar
       this.fondo.ticker.add(this._cuadro);
       this.lista = true;
@@ -156,6 +164,20 @@ export class EscenaSala {
       console.warn('[sala] WebGL falló, uso imagen de respaldo:', error);
       this._soltar();
       return this._respaldo();
+    }
+  }
+
+  // El celular puede quitarle el contexto WebGL a la página (otra app, poca memoria).
+  // Mientras no vuelva, la sala quieta de respaldo ocupa su lugar; al volver, Pixi retoma solo.
+  _vigilarContexto(contenedor) {
+    const perdido = (ev) => {
+      ev.preventDefault();
+      Object.assign(contenedor.style, { backgroundImage: `url(${this.cfg.recursos.respaldo})`, backgroundSize: 'auto 100%', backgroundPosition: 'center' });
+    };
+    const vuelto = () => { contenedor.style.backgroundImage = ''; this._fps = { suma: 0, cuadros: 0, desde: performance.now() }; };
+    for (const app of [this.fondo, this.vidrio]) {
+      app.canvas.addEventListener('webglcontextlost', perdido);
+      app.canvas.addEventListener('webglcontextrestored', vuelto);
     }
   }
 
@@ -206,6 +228,7 @@ export class EscenaSala {
       uOndaVel: { value: piso.velocidadOnda, type: 'f32' },
       uReflejoCuadro: { value: piso.reflejoCuadro, type: 'f32' },
       uExposicion: { value: 1, type: 'f32' },
+      uLigero: { value: 0, type: 'f32' },     // 1 = sin reflejos de cuadros ni onda en el piso (equipos justos)
     };
     for (let i = 0; i < MAX_CUADROS; i++) {
       this.uSala[`uCua${i}`] = { value: new Float32Array(4), type: 'vec4<f32>' };
@@ -389,6 +412,7 @@ export class EscenaSala {
     u.uFocoBase = baseFoco;
     u.uAmbiente = this._ambiente;
     u.uExposicion = this.exposicion;
+    u.uLigero = this.calidad === 'bajo' ? 1 : 0;
     // valores de ajuste: se releen cada cuadro, así un cambio en pixiConfig se ve al instante
     u.uCalidez = luces.calidez;
     u.uPisoFuerza = piso.fuerza;
@@ -429,25 +453,42 @@ export class EscenaSala {
                + this.giro * vidrio.porGiro;
         par[1] = r.intensidad ?? 1;
       }
-      this.vidrio.render();
+      if (this.vidrios.length) this.vidrio.render();   // sin cuadros a la vista (antesala), no se dibuja nada
     }
 
     this._vigilarFps(ticker.deltaMS);
   }
 
-  // si el equipo no da, baja un nivel de calidad solo
+  // Si el equipo no da: primero baja la resolución, después el nivel de calidad. Nunca en los primeros
+  // segundos (compilación de shaders y carga de fotos) ni con la pestaña oculta o recién vuelta.
   _vigilarFps(ms) {
-    if (document.hidden) return;
-    const fija = calidadForzada();                 // con ?calidad=… no se baja sola
+    if (document.hidden) { this._fps = { suma: 0, cuadros: 0, desde: performance.now() }; return; }
     const { autoBajar } = this.cfg.calidad;
+    if (performance.now() - this._fps.desde < autoBajar.calentamiento * 1000) return;
+    if (ms > 250) return;                          // un tirón aislado (cambio de pestaña, GC) no cuenta
     this._fps.suma += ms; this._fps.cuadros++;
     if (this._fps.suma < autoBajar.ventana * 1000) return;
     const fps = (this._fps.cuadros * 1000) / this._fps.suma;
-    this._fps = { suma: 0, cuadros: 0 };
+    this._fps.suma = 0; this._fps.cuadros = 0;
     this.fpsMedido = fps;
+    const fija = calidadForzada();                 // con ?calidad=… no se baja sola
     const tope = this.cfg.calidad[this.calidad].fps;
-    if (fps < Math.min(autoBajar.fpsMinimo, tope * 0.7) && this.calidad !== 'bajo' && !fija) {
-      this.fijarCalidad(bajarNivel(this.calidad));
+    if (fija || fps >= Math.min(autoBajar.fpsMinimo, tope * 0.7)) return;
+    if (this.calidad !== 'bajo') this.fijarCalidad(bajarNivel(this.calidad));
+    else if (this._factorRes > autoBajar.factorMin + 0.01) this._fijarFactorRes(Math.max(autoBajar.factorMin, this._factorRes * autoBajar.paso));
+    this._fps.desde = performance.now() - (autoBajar.calentamiento - 1) * 1000;   // medir de nuevo tras 1 s
+  }
+
+  _fijarFactorRes(f) {
+    this._factorRes = f;
+    this._aplicarResolucion();
+  }
+
+  _aplicarResolucion() {
+    const r = this._resolucion();
+    for (const app of [this.fondo, this.vidrio]) {
+      app.renderer.resolution = r;
+      app.renderer.resize(this.ancho, this.alto);
     }
   }
 
@@ -456,11 +497,8 @@ export class EscenaSala {
     if (this.sinWebGL || nivel === this.calidad) return;
     this.calidad = nivel;
     const q = this.cfg.calidad[nivel];
-    const resolucion = Math.min(window.devicePixelRatio || 1, q.resolucionMax);
-    for (const app of [this.fondo, this.vidrio]) {
-      app.renderer.resolution = resolucion;
-      app.renderer.resize(this.ancho, this.alto);
-    }
+    this._aplicarResolucion();
+    if (!calidadForzada()) recordarCalidad(nivel);
     this.vidrio.canvas.style.display = q.vidrio ? '' : 'none';
     this._limitarFps(q.fps);
     this._crearMotas();

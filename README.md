@@ -52,4 +52,4 @@ python tools/generar_sala.py
 - [x] 5. Antesala y transición
 - [x] 6. Desliz, flechas, relato y consultas
 - [x] 7. Backend, base de datos y panel
-- [ ] 8. Rendimiento y accesibilidad
+- [x] 8. Rendimiento, celulares y accesibilidad (ver `docs/RENDIMIENTO.md`)

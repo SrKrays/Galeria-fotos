@@ -4,13 +4,16 @@
 // Con ?prueba=1 se abre el banco de pruebas de la escena Pixi sin cuadros.
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Sala from './paginas/Sala.jsx';
 import SalaPrueba from './componentes/SalaPrueba.jsx';
 import Loader from './componentes/Loader.jsx';
 import { fotos as fotosDeMuestra } from './datos/fotos.js';
 import { modoDemostracion, obtenerFotos } from './servicios/api.js';
 
 const Admin = lazy(() => import('./admin/Admin.jsx'));
+// Pixi, GSAP y la sala son la parte pesada: se bajan en paralelo con las fotos, y la pantalla de carga sale antes
+const cargarSala = () => import('./paginas/Sala.jsx');
+const Sala = lazy(cargarSala);
+if (!/^\/admin/.test(location.pathname)) cargarSala();
 
 // Carga las fotos ANTES de montar la sala: así la escena arranca sabiendo cuántos cuadros hay.
 function Galeria() {
@@ -40,7 +43,7 @@ function Galeria() {
       </div>
     );
   }
-  return <Sala fotos={estado.fotos} />;
+  return <Suspense fallback={<Loader visible />}><Sala fotos={estado.fotos} /></Suspense>;
 }
 
 export default function App() {

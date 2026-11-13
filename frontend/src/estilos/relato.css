@@ -213,15 +213,37 @@
 /* ── celular en vertical: foto arriba, relato abajo con scroll ── */
 @media (max-aspect-ratio: 9/10) {
   .relato { top: 48%; bottom: 0; left: 0; width: 100%; border-width: 1px 0 0; }
-  .relato__volver { position: fixed; top: 6px; left: 2px; margin: 0; min-height: 48px; text-shadow: 0 1px 8px #000; }
+  .relato__volver { position: fixed; top: calc(6px + env(safe-area-inset-top)); left: max(2px, env(safe-area-inset-left)); margin: 0; min-height: 48px; text-shadow: 0 1px 8px #000; }
   .relato__cuerpo { padding: 4px 20px 20px; }
   .relato__cabeza { padding-top: 16px; }
   .relato__pie { padding: 12px 20px calc(14px + env(safe-area-inset-bottom)); }
   .relato__fondo { background: linear-gradient(180deg, transparent 30%, rgba(3, 2, 1, 0.55) 50%); }
   .consulta__fila { grid-template-columns: 1fr; }
   .consulta__velo { padding: 0; place-items: end center; }
-  .consulta { max-height: 94dvh; border-width: 1px 0 0; }
+  .consulta { max-height: 94dvh; border-width: 1px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 }
+
+/* celular acostado: la placa de relato a la derecha, con letra un poco más chica y botones más bajos */
+@media (max-height: 520px) and (orientation: landscape) {
+  .relato { top: max(4%, env(safe-area-inset-top)); bottom: 4%; left: 55%; width: calc(45% - max(8px, env(safe-area-inset-right))); }
+  .relato__volver { min-height: 44px; margin: 4px 0 0 6px; font-size: 16px; }
+  .relato__cuerpo { padding: 2px 18px 18px; }
+  .relato__cabeza { padding-top: 6px; }
+  .relato__cabeza h2 { font-size: clamp(24px, 7vh, 32px); }
+  .relato__dato { font-size: 16px; }
+  .relato__gancho { font-size: 18px; padding-bottom: 0.7em; }
+  .relato__parrafo { font-size: 16.5px; line-height: 1.5; margin-top: 0.9em; }
+  .relato__pie { padding: 8px 18px 10px; }
+  .relato .boton { min-height: 46px; font-size: 17px; }
+  .consulta__velo { padding: 0; place-items: center; }
+  .consulta { width: min(640px, 100%); max-height: 100dvh; }
+  .consulta__fila { grid-template-columns: 1fr 1fr; }
+  .consulta__foto img { width: 56px; height: 56px; }
+}
+
+/* equipos justos: el desenfoque del texto y la sombra del panel salen caros */
+.sala--q-bajo .relato { box-shadow: inset 0 0 0 3px #0c0a07, 0 10px 24px rgba(0, 0, 0, 0.6); }
+.sala--q-bajo .relato__cuerpo { -webkit-mask-image: none; mask-image: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .cuadro, .placa, .boton { transition: none; }

@@ -43,6 +43,9 @@ export default function Sala({ fotos }) {
   const [lista, setLista] = useState(false);
   const [vidrioCss, setVidrioCss] = useState(false);
   const [extremo, setExtremo] = useState({ inicio: false, fin: false });
+  const [calidad, setCalidad] = useState('alto');
+  const [centrado, setCentrado] = useState(0);        // foto del centro, para el aviso a lectores de pantalla
+  const [resto, setResto] = useState(false);          // true = ya se pueden bajar las fotos que no se ven todavía
 
   // fase: 'antesala' -> 'entrando' -> 'sala'. Entrar directo a /sala o /foto/… saltea la antesala.
   const ubicacion = useLocation();
@@ -60,10 +63,16 @@ export default function Sala({ fotos }) {
   const paso = salaMeta.aspecto * 0.5 * tam.alto;   // px entre un foco y el siguiente
 
   useLayoutEffect(() => {
-    const medir = () => setTam({ ancho: salaRef.current.clientWidth, alto: salaRef.current.clientHeight });
+    let marco = 0;
+    const medir = () => {
+      const a = salaRef.current.clientWidth, h = salaRef.current.clientHeight;
+      setTam((t) => (t.ancho === a && t.alto === h ? t : { ancho: a, alto: h }));
+    };
+    const pedir = () => { cancelAnimationFrame(marco); marco = requestAnimationFrame(medir); };   // una medición por cuadro, no una por evento
     medir();
-    window.addEventListener('resize', medir);
-    return () => window.removeEventListener('resize', medir);
+    window.addEventListener('resize', pedir);
+    window.addEventListener('orientationchange', pedir);
+    return () => { cancelAnimationFrame(marco); window.removeEventListener('resize', pedir); window.removeEventListener('orientationchange', pedir); };
   }, []);
 
   // ═══════════════ escena, bucle y desliz ═══════════════
@@ -76,7 +85,7 @@ export default function Sala({ fotos }) {
     const cam = camRef.current;
     let vivo = true;
     let arrastre = null, encima = null, activoPrevio = -2, extremoPrevio = '', htmlMovido = false;
-    let ruedaAcum = 0, ruedaHasta = 0, giro = 0;
+    let ruedaAcum = 0, ruedaHasta = 0, giro = 0, centroPrevio = -1;
 
     // Cuántos cuadros entran completos, dejando lugar a las flechas: 3, 2 o 1.
     // Con 2, la pared descansa a medio camino entre dos focos (desfase 0,5):
@@ -122,11 +131,12 @@ export default function Sala({ fotos }) {
       fueArrastre: () => arrastre?.movido ?? false,
     };
 
-    escena.alCambiarCalidad(() => setVidrioCss(!escena.vidrioConShader));
+    escena.alCambiarCalidad(() => { setVidrioCss(!escena.vidrioConShader); setCalidad(escena.calidad); });
     escena.iniciar(sala).then(() => {
       if (!vivo) return;
       window.__escena = escena;
       setVidrioCss(!escena.vidrioConShader);
+      setCalidad(escena.sinWebGL ? 'bajo' : escena.calidad);
       setLista(true);
       if (escena.sinWebGL) { const id = setInterval(() => (vivo ? cuadro() : clearInterval(id)), 16); }
       else escena.antesDeCuadro(cuadro);
@@ -176,6 +186,7 @@ export default function Sala({ fotos }) {
 
       // ── cuadro activo: el abierto; si no, el del mouse; en celular, el del centro ──
       const centro = limitar(Math.round(pos), 0, ultimo);
+      if (r === 0 && centro !== centroPrevio) { centroPrevio = centro; setCentrado(centro); }
       const activo = r > 0 ? iR : (encima ? encima.i : (tactil ? centro : null));
       escena.fijarFocoActivo(activo);
       if (activo !== activoPrevio) {
@@ -268,7 +279,11 @@ export default function Sala({ fotos }) {
       const el = ev.target.closest?.('.cuadro');
       if (el && libre() && ev.target.matches(':focus-visible')) controlRef.current.mostrar(Number(el.dataset.indice));
     };
-    const redim = () => { escena.alRedimensionar(); if (faseRef.current === 'sala') saltarA(encajar(e.pos)); };
+    let esperaRedim = 0;
+    const redim = () => {                                    // la barra del navegador del celular dispara muchos resize seguidos
+      clearTimeout(esperaRedim);
+      esperaRedim = setTimeout(() => { escena.alRedimensionar(); if (faseRef.current === 'sala') saltarA(encajar(e.pos)); }, 120);
+    };
     // celular: el reflejo del vidrio acompaña la inclinación (solo donde no hace falta pedir permiso)
     const inclinacion = (ev) => { if (ev.gamma != null) controlRef.current.giro = limitar(ev.gamma / 35, -1, 1); };
     const conGiro = tactil && 'DeviceOrientationEvent' in window && typeof DeviceOrientationEvent.requestPermission !== 'function';
@@ -283,9 +298,11 @@ export default function Sala({ fotos }) {
     sala.addEventListener('focusin', enfoque);
     window.addEventListener('keydown', tecla);
     window.addEventListener('resize', redim);
+    window.addEventListener('orientationchange', redim);
 
     return () => {
       vivo = false;
+      clearTimeout(esperaRedim);
       gsap.killTweensOf(e);
       sala.removeEventListener('pointerdown', abajo);
       sala.removeEventListener('pointermove', mover);
@@ -296,10 +313,19 @@ export default function Sala({ fotos }) {
       sala.removeEventListener('focusin', enfoque);
       window.removeEventListener('keydown', tecla);
       window.removeEventListener('resize', redim);
+      window.removeEventListener('orientationchange', redim);
       if (conGiro) window.removeEventListener('deviceorientation', inclinacion);
       escena.destruir();
     };
   }, []);
+
+  // las fotos que no se ven al arrancar se bajan después, con la sala ya andando (y no con "ahorro de datos")
+  useEffect(() => {
+    if (!lista) return undefined;
+    if (navigator.connection?.saveData) return undefined;
+    const id = setTimeout(() => setResto(true), 2500);
+    return () => clearTimeout(id);
+  }, [lista]);
 
   // ═══════════════ antesala -> sala ═══════════════
   // la cámara avanza, se cruza un instante oscuro y se encienden los cuadros
@@ -385,7 +411,8 @@ export default function Sala({ fotos }) {
   const guardarColor = useCallback((i, color) => { coloresRef.current[i] = color; }, []);
 
   const enRelato = abierto !== null;
-  const clases = `sala sala--fase-${fase}${enRelato ? ' sala--relato' : ''}${vidrioCss ? ' sala--vidrio-css' : ''}`;
+  const clases = `sala sala--fase-${fase} sala--q-${calidad}${enRelato ? ' sala--relato' : ''}${vidrioCss ? ' sala--vidrio-css' : ''}`;
+  const rutaFoto = indiceDeRuta(ubicacion.pathname, fotos);
 
   return (
     <>
@@ -399,6 +426,7 @@ export default function Sala({ fotos }) {
               <Cuadro
                 key={foto.id} foto={foto} indice={i} paso={paso}
                 altoSala={tam.alto} anchoSala={tam.ancho} abierto={abierto === i}
+                temprana={resto || i < 3 || i === rutaFoto}
                 ref={(el) => { cuadrosRef.current[i] = el; }}
                 alAbrir={abrir} alCargarColor={guardarColor}
               />
@@ -420,6 +448,11 @@ export default function Sala({ fotos }) {
                 disabled={extremo.fin || fase !== 'sala' || enRelato} onClick={() => controlRef.current?.siguiente()}>
           <svg viewBox="0 0 24 40" aria-hidden="true"><path d="M5 3l15 17L5 37" /></svg>
         </button>
+
+        {/* lectores de pantalla: avisa qué foto quedó al centro al deslizar */}
+        <p className="solo-lector" role="status" aria-live="polite">
+          {fase === 'sala' && !enRelato && lista ? `Foto ${centrado + 1} de ${fotos.length}: ${fotos[centrado]?.titulo ?? ''}` : ''}
+        </p>
 
         <Relato foto={enRelato ? fotos[abierto] : null} alVolver={volver} />
       </main>

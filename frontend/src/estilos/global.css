@@ -20,7 +20,13 @@ html, body, #raiz {
   overscroll-behavior: none;
 }
 
-body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+body { font-family: var(--sans); -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* texto solo para lectores de pantalla */
+.solo-lector {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
 
 /* ── sala ── */
 .sala {
@@ -31,6 +37,9 @@ body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
   touch-action: pan-y;
   cursor: grab;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;          /* iPhone: sin el menú de "guardar imagen" al mantener apretado */
+  contain: layout paint;
 }
 .sala:active { cursor: grabbing; }
 
@@ -210,6 +219,9 @@ body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
   padding: 0 clamp(64px, 9vw, 150px);
   pointer-events: none;
 }
+@supports (top: env(safe-area-inset-top)) {
+  .sala__titulo { top: calc(100% * 0.095 + env(safe-area-inset-top) * 0.5); }
+}
 .sala__titulo h1 {
   margin: 0;
   font-family: var(--serif);
@@ -245,8 +257,8 @@ body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
   transition: opacity 0.4s ease, transform 0.25s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.flecha--izq { left: clamp(2px, 1vw, 16px); }
-.flecha--der { right: clamp(2px, 1vw, 16px); }
+.flecha--izq { left: max(clamp(2px, 1vw, 16px), env(safe-area-inset-left)); }
+.flecha--der { right: max(clamp(2px, 1vw, 16px), env(safe-area-inset-right)); }
 .flecha svg {
   width: 44%;
   fill: none;
@@ -264,14 +276,39 @@ body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
 
 /* celular en vertical: título en dos tamaños más chicos y sin líneas largas */
 @media (max-aspect-ratio: 3/4) {
-  .sala__titulo { top: 10.5%; padding: 0 16px; gap: 10px; }
+  .sala__titulo { top: calc(10.5% + env(safe-area-inset-top) * 0.4); padding: 0 16px; gap: 10px; }
   .sala__titulo h1 { font-size: clamp(20px, 6.2vw, 30px); }
   .sala__linea { flex-basis: 28px; }
-  .flecha { top: auto; bottom: 3.5%; margin-top: 0; height: 64px; width: 64px; }
+  /* las flechas bajan al pulgar, apoyadas sobre el piso, lejos de la barra de gestos */
+  .flecha { top: auto; bottom: calc(3.5% + env(safe-area-inset-bottom)); margin-top: 0; height: 64px; width: 64px; }
+  .flecha--izq { left: max(8px, env(safe-area-inset-left)); }
+  .flecha--der { right: max(8px, env(safe-area-inset-right)); }
+}
+
+/* celular acostado: poco alto, todo se compacta */
+@media (max-height: 520px) and (orientation: landscape) {
+  .sala__titulo { top: calc(5.5% + env(safe-area-inset-top)); }
+  .sala__titulo h1 { font-size: clamp(18px, 6.4vh, 26px); }
+  .flecha { width: 56px; height: 76px; }
+  .antesala__entrar { top: 74%; padding: 0.35em 1em; }
+}
+
+/* equipos justos (nivel bajo): menos sombras y filtros, misma imagen */
+.sala--q-bajo .marco { box-shadow: 0 6px 10px rgba(0, 0, 0, 0.6), 0 18px 28px rgba(0, 0, 0, 0.35); transition: none; }
+.sala--q-bajo .marco::after { display: none; }
+.sala--q-bajo .marco__foto img { filter: none; transition: none; }
+.sala--q-bajo .cuadro--activo .marco { filter: none; }
+.sala--q-bajo .placa { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6); }
+.sala--q-bajo .cuadro--activo .placa { box-shadow: 0 0 0 1px rgba(232, 201, 138, 0.5), 0 4px 10px rgba(0, 0, 0, 0.6); }
+.sala--q-bajo .placa__leer { animation: none !important; }
+
+/* los efectos de pasar el mouse no existen en pantallas táctiles */
+@media (hover: none) {
+  .flecha:hover:not(:disabled) { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .placa__leer { animation: none; }
+  .placa__leer, .cuadro--activo .placa__leer { animation: none; }
   .flecha, .placa { transition: none; }
 }
 
@@ -407,6 +444,10 @@ body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
   .antesala__bloque { top: 41%; }
   .antesala__reflejo { transform: scaleY(-0.32); }
   .antesala__entrar { top: 72.5%; font-size: 15px; letter-spacing: 0.2em; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .antesala__nombre, .antesala__reflejo { font-size: min(6.9vw, 17vh); }
+  .antesala__sub { font-size: clamp(14px, 4vh, 20px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

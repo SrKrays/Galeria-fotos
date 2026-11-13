@@ -103,8 +103,9 @@ export const pixiConfig = {
     alto:  { resolucionMax: 2.0,  fps: 60, vidrio: true,  baseMovil: false },
     medio: { resolucionMax: 1.25, fps: 60, vidrio: true,  baseMovil: false },
     bajo:  { resolucionMax: 0.85, fps: 30, vidrio: false, baseMovil: true  },
-    // si los FPS promedio caen por debajo de esto durante `ventana` segundos, baja un nivel
-    autoBajar: { fpsMinimo: 42, ventana: 3 },
+    // si los FPS promedio caen por debajo de esto durante `ventana` segundos, baja:
+    // primero la resolución (de a `paso`, hasta `factorMin`), recién después el nivel de calidad
+    autoBajar: { fpsMinimo: 42, ventana: 2.5, calentamiento: 2.5, paso: 0.8, factorMin: 0.6 },
   },
 
   // movimiento reducido (prefers-reduced-motion): multiplicadores

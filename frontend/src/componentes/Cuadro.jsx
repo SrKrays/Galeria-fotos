@@ -4,7 +4,7 @@ import { forwardRef } from 'react';
 import { marcoDe, medidasCuadro } from '../marcos/index.js';
 import Placa from './Placa.jsx';
 
-const Cuadro = forwardRef(function Cuadro({ foto, indice, altoSala, anchoSala, paso, abierto, alAbrir, alCargarColor }, ref) {
+const Cuadro = forwardRef(function Cuadro({ foto, indice, altoSala, anchoSala, paso, abierto, temprana, alAbrir, alCargarColor }, ref) {
   const marco = marcoDe(foto.marco);
   const m = medidasCuadro(foto, altoSala, anchoSala);
 
@@ -41,9 +41,10 @@ const Cuadro = forwardRef(function Cuadro({ foto, indice, altoSala, anchoSala, p
             <div className="marco__foto" style={{ width: `${m.fotoAncho}px`, height: `${m.fotoAlto}px` }}>
               <img
                 src={foto.src} alt={foto.alt} draggable="false" decoding="async"
+                loading={temprana ? 'eager' : 'lazy'} fetchPriority={indice === 0 ? 'high' : undefined}
                 // con backend: miniatura para pantallas chicas, mediana para el resto y para el zoom del relato
                 srcSet={foto.miniatura ? `${foto.miniatura} 480w, ${foto.src} 1800w` : undefined}
-                sizes={foto.miniatura ? '(max-aspect-ratio: 9/10) 90vw, 50vw' : undefined}
+                sizes={foto.miniatura ? (abierto ? '1800px' : `${Math.round(m.fotoAncho)}px`) : undefined}
                 onLoad={foto.color ? undefined : alCargar}
               />
             </div>

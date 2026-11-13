@@ -1,6 +1,10 @@
 // sala.frag — pared, luces vivas y piso reflectante.
 // GLSL ES 1.00 a propósito: corre igual en WebGL1 (celulares viejos) y WebGL2.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
+#else
+precision mediump float;          // GPUs muy viejas: la sala se ve igual, las cuentas son chicas
+#endif
 
 varying vec2 vUV;                 // 0..1 en pantalla, origen arriba-izquierda
 
@@ -27,6 +31,7 @@ uniform float uAmbiente;
 uniform float uCalidez;
 uniform vec3  uColorLuz;
 uniform float uExposicion;       // 1 normal · 0 a oscuras
+uniform float uLigero;           // 1 = modo liviano: sin onda ni reflejo de cuadros en el piso
 
 uniform float uPisoFuerza;
 uniform float uPisoSeguir;
@@ -98,7 +103,7 @@ void main() {
     // ── piso: profundidad 0 en el zócalo, 1 en el borde inferior ──
     float prof = clamp((uv.y - uPisoY) / (1.0 - uPisoY), 0.0, 1.0);
     float atraso = (uScrollPiso - uScroll) * prof;                  // llega tarde
-    float amp = (uOnda + uOndaDesliz * min(abs(uVelocidad), 3.0)) * (0.25 + prof);
+    float amp = uLigero > 0.5 ? 0.0 : (uOnda + uOndaDesliz * min(abs(uVelocidad), 3.0)) * (0.25 + prof);
     float onda = sin(uv.y * uOndaFrec * 6.2832 - uTiempo * uOndaVel * 6.2832
                      + sin(c * 1.7) * 0.6) * amp;
     float cp = c + atraso + onda / porFoco;
@@ -112,11 +117,13 @@ void main() {
 
     // cuadros reflejados: usan el mismo pulido del piso para no verse "pegados"
     float xs = vUV.x + (onda + atraso * porFoco) * uRes.y / uRes.x * uZoom;
-    vec3 rc = reflejoCuadro(uCua0, uCuaCol0, xs, prof) + reflejoCuadro(uCua1, uCuaCol1, xs, prof)
-            + reflejoCuadro(uCua2, uCuaCol2, xs, prof) + reflejoCuadro(uCua3, uCuaCol3, xs, prof)
-            + reflejoCuadro(uCua4, uCuaCol4, xs, prof) + reflejoCuadro(uCua5, uCuaCol5, xs, prof);
-    float caida = exp(-prof * 2.4) * smoothstep(0.0, 0.05, prof);
-    cPiso += rc * caida * uReflejoCuadro * (0.16 + 2.4 * luma(basePiso));
+    if (uLigero < 0.5) {
+      vec3 rc = reflejoCuadro(uCua0, uCuaCol0, xs, prof) + reflejoCuadro(uCua1, uCuaCol1, xs, prof)
+              + reflejoCuadro(uCua2, uCuaCol2, xs, prof) + reflejoCuadro(uCua3, uCuaCol3, xs, prof)
+              + reflejoCuadro(uCua4, uCuaCol4, xs, prof) + reflejoCuadro(uCua5, uCuaCol5, xs, prof);
+      float caida = exp(-prof * 2.4) * smoothstep(0.0, 0.05, prof);
+      cPiso += rc * caida * uReflejoCuadro * (0.16 + 2.4 * luma(basePiso));
+    }
     color = mix(color, cPiso, piso);
   }
 

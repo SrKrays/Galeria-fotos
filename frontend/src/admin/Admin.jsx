@@ -14,13 +14,13 @@ export default function Admin() {
 
   if (modoDemostracion) {
     return (
-      <div className="adm adm--centro">
+      <main className="adm adm--centro">
         <div className="adm__tarjeta">
           <h1>Panel de la galería</h1>
           <p>Todavía no hay un servidor conectado. Definí <code>VITE_API_URL</code> en <code>frontend/.env</code> con la dirección del backend y recargá.</p>
           <a className="adm__enlace" href="/">Volver a la galería</a>
         </div>
-      </div>
+      </main>
     );
   }
   return s ? <Panel sesionActual={s} alSalir={salir} /> : <Ingreso alIngresar={(x) => { sesion.guardar(x); setS(x); }} />;
@@ -41,7 +41,7 @@ function Ingreso({ alIngresar }) {
   };
 
   return (
-    <div className="adm adm--centro">
+    <main className="adm adm--centro">
       <form className="adm__tarjeta" onSubmit={enviar}>
         <h1>Panel de la galería</h1>
         <label className="adm__campo"><span>Usuario</span>
@@ -54,7 +54,7 @@ function Ingreso({ alIngresar }) {
         <button className="adm__boton adm__boton--principal" disabled={enviando}>{enviando ? 'Ingresando…' : 'Ingresar'}</button>
         <a className="adm__enlace" href="/">Volver a la galería</a>
       </form>
-    </div>
+    </main>
   );
 }
 

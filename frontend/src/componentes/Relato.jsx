@@ -41,7 +41,7 @@ function PanelRelato({ foto, alVolver }) {
         type="button" className="relato__fondo" aria-label="Volver a la sala" tabIndex={-1} onClick={alVolver}
         initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.6 } }} exit={{ opacity: 0, transition: { duration: 0.4 } }}
       />
-      <motion.aside className="relato" role="dialog" aria-modal="false" aria-labelledby="relato-titulo" {...entrada}>
+      <motion.div className="relato" role="dialog" aria-modal="false" aria-labelledby="relato-titulo" {...entrada}>
         <button type="button" className="relato__volver" onClick={alVolver}>
           <svg viewBox="0 0 24 40" aria-hidden="true"><path d="M19 3 4 20l15 17" /></svg>
           Volver a la sala
@@ -74,7 +74,7 @@ function PanelRelato({ foto, alVolver }) {
             Consultar por esta foto
           </button>
         </footer>
-      </motion.aside>
+      </motion.div>
 
       <AnimatePresence>
         {consultando && <Consulta foto={foto} alCerrar={() => setConsultando(false)} />}
