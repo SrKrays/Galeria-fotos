@@ -1,0 +1,13 @@
+/* Plateado fino moderno — perfil metálico cepillado, paspartú blanco hueso. */
+.marco--plateado {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px),
+    linear-gradient(135deg, #d4d3ce 0%, #84837f 22%, #c2c1bb 44%, #6c6b68 66%, #a9a8a3 84%, #55544f 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 0 calc(var(--g) * 0.22) rgba(60, 60, 58, 0.35),
+    0 calc(var(--g) * 0.25 + 3px) 6px rgba(0, 0, 0, 0.55),
+    0 calc(var(--u) * 0.022) calc(var(--u) * 0.03) rgba(0, 0, 0, 0.62),
+    0 calc(var(--u) * 0.05) calc(var(--u) * 0.07) rgba(0, 0, 0, 0.38);
+}
+.marco--plateado .marco__interior { background: linear-gradient(180deg, #ddd5c3, #cfc6b2); }

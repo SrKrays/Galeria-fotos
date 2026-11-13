@@ -1,0 +1,120 @@
+/* Panel de administración: sobrio, letra grande, mucho contraste. */
+.adm {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  background: #12100d;
+  color: #f1eadb;
+  font: 400 17px/1.5 var(--sans);
+}
+.adm--centro { display: grid; place-items: center; padding: 20px; }
+.adm h1, .adm h2 { margin: 0; font-family: var(--serif); font-weight: 500; }
+.adm h1 { font-size: 26px; }
+.adm h2 { font-size: 30px; }
+.adm h2 small { margin-left: 10px; font: 400 16px var(--sans); color: #b9ad95; }
+.adm code { padding: 1px 6px; background: #26221b; border-radius: 3px; font-size: 0.92em; }
+.adm a { color: #e8c98a; }
+
+.adm__tarjeta { display: grid; gap: 16px; width: min(420px, 100%); padding: 30px 28px; background: #1b1813; border: 1px solid #6e5a34; border-radius: 6px; }
+.adm__enlace { justify-self: center; font-size: 16px; }
+
+.adm__barra { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px; padding: 12px clamp(14px, 3vw, 36px); background: #1b1813; border-bottom: 1px solid #4a3d24; }
+.adm__pestanas { display: flex; gap: 6px; flex: 1; }
+.adm__pestanas button, .adm__filtro button, .adm__cuenta button {
+  min-height: 46px; padding: 0 18px; border: 1px solid transparent; border-radius: 4px; background: none; color: #d9cdb4; font: 600 17px var(--sans); cursor: pointer;
+}
+.adm__pestanas button.activa, .adm__filtro button.activa { color: #1a1206; background: #e8c98a; }
+.adm__pestanas button:not(.activa):hover, .adm__filtro button:not(.activa):hover, .adm__cuenta button:hover { border-color: #6e5a34; }
+.adm__cuenta { display: flex; align-items: center; gap: 14px; }
+.adm__filtro { display: flex; gap: 4px; padding: 3px; border: 1px solid #4a3d24; border-radius: 6px; }
+.adm__filtro button { min-height: 40px; font-size: 16px; }
+
+.adm__cuerpo { max-width: 1080px; margin: 0 auto; padding: 26px clamp(14px, 3vw, 36px) 80px; }
+.adm__encabezado { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.adm__vacio { padding: 34px 16px; text-align: center; color: #b9ad95; border: 1px dashed #4a3d24; border-radius: 6px; }
+.adm__nota { margin: 8px 0 0; font-size: 15.5px; color: #b9ad95; }
+
+.adm__aviso { position: sticky; top: 72px; z-index: 6; margin: 10px auto 0; width: fit-content; max-width: calc(100% - 28px); padding: 12px 20px; border-radius: 4px; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+.adm__aviso--ok { background: #1f5a36; color: #eafff1; }
+.adm__aviso--error, .adm__error { background: #6a2318; color: #ffe3dc; }
+.adm__error { margin: 0; padding: 10px 14px; border-radius: 4px; }
+
+/* botones */
+.adm__boton { min-height: 46px; padding: 0 18px; border: 1px solid #6e5a34; border-radius: 4px; background: #26221b; color: #f1eadb; font: 600 16.5px var(--sans); cursor: pointer; }
+.adm__boton:hover:not(:disabled) { border-color: #e8c98a; }
+.adm__boton:disabled { opacity: 0.4; cursor: default; }
+.adm__boton--principal { border-color: #f0d594; background: linear-gradient(180deg, #f0d594, #c79b45); color: #1a1206; }
+.adm__boton--tenue { background: none; color: #d9cdb4; }
+.adm__boton--peligro { border-color: #d2644e; background: #7c2a1c; color: #fff; }
+.adm__boton--icono { width: 46px; padding: 0; font-size: 20px; }
+.adm__confirmar { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.adm :is(button, a, input, select, textarea):focus-visible { outline: 3px solid #e8c98a; outline-offset: 2px; }
+
+/* listas */
+.adm__lista { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.adm__fila, .adm__consulta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 12px 14px; background: #1b1813; border: 1px solid #3a3020; border-radius: 6px; }
+.adm__fila img, .adm__consulta img { flex: none; width: 84px; height: 84px; object-fit: cover; border-radius: 3px; background: #000; }
+.adm__fila-texto, .adm__consulta-texto { flex: 1 1 260px; display: grid; gap: 2px; min-width: 0; }
+.adm__fila-texto strong { font: 500 22px/1.2 var(--serif); }
+.adm__fila-texto span { font-size: 15.5px; color: #c9bda4; }
+.adm__estado { font-weight: 600; color: #d9a05a !important; }
+.adm__estado--si { color: #7fd6a0 !important; }
+.adm__falta { color: #ffb3a3 !important; }
+.adm__fila-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* formulario */
+.adm__form { display: grid; gap: 20px; }
+.adm__campo { display: grid; gap: 6px; }
+.adm__campo > span { font-weight: 600; }
+.adm__campo i { margin-left: 6px; font: 400 15px var(--sans); color: #b9ad95; }
+.adm__campo :is(input, select, textarea), .adm__renombrar {
+  width: 100%; min-height: 50px; padding: 11px 13px; border: 1px solid #6e5a34; border-radius: 4px; background: #0c0a08; color: #f6efe0; font: 400 18px/1.45 var(--sans);
+}
+.adm__campo input[type='file'] { padding: 9px; font-size: 16px; }
+.adm__campo textarea { resize: vertical; }
+.adm__dos { display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 24px; }
+.adm__campos { display: grid; gap: 14px; align-content: start; }
+.adm__par { display: grid; grid-template-columns: 140px 1fr; gap: 14px; }
+.adm__archivo { display: grid; gap: 12px; align-content: start; }
+.adm__archivo img, .adm__sin-foto { width: 100%; max-height: 340px; object-fit: contain; background: #0c0a08; border: 1px solid #3a3020; border-radius: 4px; }
+.adm__sin-foto { display: grid; place-items: center; height: 220px; color: #8d8270; }
+
+.adm__marcos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
+.adm__marcos legend { margin-bottom: 8px; padding: 0; font-weight: 600; }
+.adm__marco { position: relative; display: grid; gap: 4px; padding: 14px; background: #1b1813; border: 2px solid #3a3020; border-radius: 6px; cursor: pointer; }
+.adm__marco--elegido { border-color: #e8c98a; background: #26200f; }
+.adm__marco input { position: absolute; opacity: 0; }
+.adm__marco:has(input:focus-visible) { outline: 3px solid #e8c98a; outline-offset: 2px; }
+.adm__marco small { font-size: 15px; color: #b9ad95; }
+/* muestra chica de cada moldura */
+.adm__muestra { width: 64px; height: 48px; margin-bottom: 4px; background: #d8d0bd; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6); }
+.adm__muestra--dorado { border: 9px solid #b88d3a; outline: 1px solid #5a3b0a; background: #555; }
+.adm__muestra--plateado { border: 4px solid #a9a8a3; }
+.adm__muestra--madera { border: 7px solid #4e2610; outline: 1px solid #1f0d05; }
+.adm__muestra--negro { border: 4px solid #0b0b0c; outline: 1px solid #444; }
+
+.adm__check { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: #1b1813; border: 1px solid #3a3020; border-radius: 6px; cursor: pointer; }
+.adm__check input { flex: none; width: 26px; height: 26px; margin-top: 2px; accent-color: #e8c98a; }
+.adm__check strong { display: block; }
+.adm__pie, .adm__linea { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.adm__linea { margin: 18px 0; }
+.adm__linea .adm__campo { flex: 1 1 260px; }
+.adm__renombrar { min-height: 44px; padding: 6px 10px; font: 500 21px var(--serif); background: transparent; border-color: transparent; }
+.adm__renombrar:hover, .adm__renombrar:focus { border-color: #6e5a34; background: #0c0a08; }
+
+/* consultas */
+.adm__consulta { align-items: flex-start; }
+.adm__consulta--nueva { border-color: #e8c98a; }
+.adm__consulta--respondida { opacity: 0.6; }
+.adm__consulta p { margin: 0; }
+.adm__consulta-foto { font: 500 21px/1.2 var(--serif); }
+.adm__consulta-foto small { font: 400 14.5px var(--sans); color: #b9ad95; }
+.adm__consulta-foto b { margin-left: 8px; padding: 2px 9px; font: 600 13.5px var(--sans); color: #1a1206; background: #e8c98a; border-radius: 99px; vertical-align: middle; }
+.adm__consulta-mensaje { margin-top: 6px !important; padding: 10px 12px; background: #0c0a08; border-left: 3px solid #6e5a34; white-space: pre-wrap; }
+.adm__consulta-contacto { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 8px !important; font-weight: 600; }
+
+@media (max-width: 720px) {
+  .adm__dos { grid-template-columns: 1fr; }
+  .adm__pestanas { order: 3; flex-basis: 100%; overflow-x: auto; }
+  .adm__aviso { top: 124px; }
+}

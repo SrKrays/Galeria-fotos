@@ -1,0 +1,20 @@
+{
+  "_": "Generado por tools/generar_sala.py \u2014 no editar a mano.",
+  "ancho": 1277,
+  "alto": 941,
+  "aspecto": 1.35707,
+  "zocaloY": 0.81509,
+  "pisoY": 0.82891,
+  "mosaico": true,
+  "separacionFocos": 0.5,
+  "focos": [
+    {
+      "x": 0.42939,
+      "y": 0.04365
+    },
+    {
+      "x": 0.93206,
+      "y": 0.04419
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+/* Madera oscura — nogal con veta fina y filo interior claro. */
+.marco--madera {
+  background:
+    /* veta */
+    repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.20) 0 1px, transparent 1px 3px, rgba(255, 190, 130, 0.06) 3px 4px, transparent 4px 9px),
+    repeating-linear-gradient(88deg, transparent 0 13px, rgba(0, 0, 0, 0.14) 13px 15px, transparent 15px 31px),
+    linear-gradient(135deg, #6a3416 0%, #44200d 30%, #2a1207 62%, #4e2610 100%);
+  box-shadow:
+    inset 0 0 0 calc(var(--g) * 0.08) #1f0d05,
+    inset 0 0 0 calc(var(--g) * 0.16) rgba(214, 140, 84, 0.55),
+    inset 0 0 calc(var(--g) * 0.6) rgba(0, 0, 0, 0.5),
+    0 calc(var(--g) * 0.25 + 3px) 6px rgba(0, 0, 0, 0.55),
+    0 calc(var(--u) * 0.022) calc(var(--u) * 0.03) rgba(0, 0, 0, 0.62),
+    0 calc(var(--u) * 0.05) calc(var(--u) * 0.07) rgba(0, 0, 0, 0.38);
+}
+/* el "paspartú" acá es el filo interior claro */
+.marco--madera .marco__interior {
+  background: linear-gradient(180deg, #ead9b4, #d9c49a);
+  box-shadow: 0 0 0 calc(var(--g) * 0.10) #1f0d05;
+}

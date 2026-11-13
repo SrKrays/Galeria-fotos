@@ -1,0 +1,72 @@
+/* Base común de todos los marcos. Cada estilo solo pinta la moldura y el paspartú.
+   --g = grosor de la moldura (px) · --p = paspartú (px): los pone Cuadro.jsx */
+.marco {
+  position: relative;
+  padding: var(--g);
+  /* sombra del cuadro sobre la pared: la luz viene de arriba, la sombra cae abajo */
+  box-shadow:
+    0 calc(var(--g) * 0.25 + 3px) 6px rgba(0, 0, 0, 0.55),
+    0 calc(var(--u) * 0.022) calc(var(--u) * 0.03) rgba(0, 0, 0, 0.62),
+    0 calc(var(--u) * 0.05) calc(var(--u) * 0.07) rgba(0, 0, 0, 0.38);
+  transition: filter 0.6s ease;
+}
+/* luz del foco sobre la moldura: arriba más clara, abajo en sombra */
+.marco::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 236, 196, 0.16) 0%, rgba(255, 236, 196, 0) 22%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.30) 100%);
+}
+.marco__interior {
+  position: relative;
+  padding: var(--p);
+  background: #e9e1cf;
+}
+/* sombra que la moldura tira sobre el paspartú y la foto */
+.marco__interior::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 calc(var(--g) * 0.5 + 2px) calc(var(--g) * 0.6 + 4px) rgba(0, 0, 0, 0.42),
+    inset 0 0 calc(var(--g) * 0.3 + 3px) rgba(0, 0, 0, 0.35);
+}
+.marco__foto {
+  position: relative;
+  overflow: hidden;
+  background: #111;
+}
+.marco__foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* las fotos cuelgan en penumbra: un punto menos de brillo que en pantalla plena */
+  filter: brightness(0.9) contrast(1.03);
+  transition: filter 0.6s ease;
+  -webkit-user-drag: none;
+}
+/* corte biselado del paspartú */
+.marco--con-paspartu .marco__foto {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55), 0 0 0 2px rgba(0, 0, 0, 0.18);
+}
+
+/* cuadro activo (mouse encima o centrado en el celular): el marco brilla apenas */
+.cuadro--activo .marco { filter: brightness(1.12) saturate(1.05); }
+.cuadro--activo .marco__foto img { filter: brightness(1) contrast(1.03); }
+
+/* reflejo del vidrio en CSS: solo cuando el shader está apagado (calidad baja o sin WebGL) */
+.marco__vidrio-css { display: none; }
+.sala--vidrio-css .marco__vidrio-css {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(118deg, transparent 30%, rgba(255, 246, 226, 0.13) 36%, rgba(255, 246, 226, 0.05) 46%, transparent 47%, transparent 50%, rgba(255, 246, 226, 0.09) 51%, transparent 54%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marco, .marco__foto img { transition: none; }
+}
